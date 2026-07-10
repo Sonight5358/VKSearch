@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="VKSearchServer/VKSearchServer.vcxproj" Id="352cd684-35f3-4dcf-8dd0-3aca2effc060" />
+</Solution>
