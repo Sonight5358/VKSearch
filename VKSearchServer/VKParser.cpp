@@ -1,17 +1,41 @@
-#define CPPHTTPLIB_OPENSSL_SUPPORT
-
 #include "VKParser.h"
-#include "httplib.h"
 #include "nlohmann/json.hpp"
 #include <stdexcept>
+#include <cstdio>
+#include <memory>
+#include <array>
+#include <thread>
+#include <chrono>
+#include <iostream>
 
 using json = nlohmann::json;
 
 namespace
 {
-    json FetchPostsPage(httplib::Client& cli, const std::string& domain, const std::string& token, int offset, int count = 100)
+    std::string RunCurl(const std::string& url)
     {
-        std::string path = "/method/wall.get?domain=" + domain +
+        std::string command = "curl -s \"" + url + "\"";
+        std::array<char, 4096> buffer;
+        std::string result;
+
+        std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(command.c_str(), "r"), _pclose);
+
+        if (!pipe)
+        {
+            throw std::runtime_error("Failed to launch curl");
+        }
+
+        while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr)
+        {
+            result += buffer.data();
+        }
+
+        return result;
+    }
+
+    json FetchPostsPage(const std::string& domain, const std::string& token, int offset, int count = 100)
+    {
+        std::string url = "https://api.vk.com/method/wall.get?domain=" + domain +
             "&offset=" + std::to_string(offset) +
             "&count=" + std::to_string(count) +
             "&access_token=" + token +
@@ -21,15 +45,15 @@ namespace
 
         for (int attempt = 1; attempt <= maxRetries; ++attempt)
         {
-            auto res = cli.Get(path);
+            std::string body = RunCurl(url);
 
-            if (res)
+            if (!body.empty())
             {
-                return json::parse(res->body);
+                return json::parse(body);
             }
 
-            std::cout << "Attempt " << attempt << " failed, retrying...\n";
-            std::this_thread::sleep_for(std::chrono::seconds(2));
+            std::cout << "Attempt " << attempt << " failed (empty response), retrying...\n";
+            std::this_thread::sleep_for(std::chrono::seconds(5));
         }
 
         throw std::runtime_error("VK request failed after " + std::to_string(maxRetries) + " attempts");

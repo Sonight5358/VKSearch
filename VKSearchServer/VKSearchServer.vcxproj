@@ -139,11 +139,13 @@
     </Manifest>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="OpenSearchIndexer.cpp" />
     <ClCompile Include="VKParser.cpp" />
-    <ClCompile Include="VKSearchServer.cpp" />
+    <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Config.h" />
+    <ClInclude Include="OpenSearchIndexer.h" />
     <ClInclude Include="Post.h" />
     <ClInclude Include="VKParser.h" />
   </ItemGroup>
