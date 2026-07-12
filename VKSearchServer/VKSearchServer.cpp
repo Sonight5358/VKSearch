@@ -1,27 +1,33 @@
-﻿#include <iostream>
-
-#include "httplib.h"
-#include "nlohmann/json.hpp"
-
-using json = nlohmann::json;
+﻿#include "VkParser.h"
+#include "Config.h"
+#include <iostream>
+#include <windows.h>
 
 int main()
 {
-    httplib::Client cli("localhost", 9200);
+    SetConsoleOutputCP(CP_UTF8);
 
-    auto res = cli.Get("/");
-
-    if (res)
+    try
     {
-        std::cout << "Status: " << res->status << '\n';
-        std::cout << "Body: " << res->body << '\n';
+        std::string token = LoadVkToken();
+        std::string domain = "nust_misis";
 
-        json parsed = json::parse(res->body);
-        std::cout << "Cluster name: " << parsed["cluster_name"] << '\n';
+        auto posts = ParseAllPosts(domain, token, 21000);
+
+        for (const auto& post : posts)
+        {
+            /*std::cout << "ID: " << post.id << '\n';
+            std::cout << "Date: " << post.date << '\n';
+            std::cout << "Text: " << post.text << "\n\n";*/
+        }
+
+        std::cout << "Total posts fetched: " << posts.size() << '\n';
+
+
     }
-    else
+    catch (const std::exception& e)
     {
-        std::cout << "Request failed: " << httplib::to_string(res.error()) << '\n';
+        std::cout << "Error: " << e.what() << '\n';
     }
 
     return 0;
