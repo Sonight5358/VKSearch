@@ -1,0 +1,34 @@
+{
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "russian_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [ "lowercase", "russian_stop", "russian_stemmer" ]
+        }
+      },
+      "filter": {
+        "russian_stop": {
+          "type": "stop",
+          "stopwords": "_russian_"
+        },
+        "russian_stemmer": {
+          "type": "stemmer",
+          "language": "russian"
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "id": { "type": "long" },
+      "owner_id": { "type": "long" },
+      "date": { "type": "long" },
+      "text": {
+        "type": "text",
+        "analyzer": "russian_analyzer"
+      }
+    }
+  }
+}
