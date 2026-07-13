@@ -1,3 +1,5 @@
+#define CPPHTTPLIB_OPENSSL_SUPPORT
+
 #include "VKParser.h"
 #include "nlohmann/json.hpp"
 #include <stdexcept>
@@ -33,7 +35,7 @@ namespace
         return result;
     }
 
-    json FetchPostsPage(const std::string& domain, const std::string& token, int offset, int count = 100)
+    json FetchPostsPage(const std::string& domain, const std::string& token, int offset, int count)
     {
         std::string url = "https://api.vk.com/method/wall.get?domain=" + domain +
             "&offset=" + std::to_string(offset) +
@@ -60,24 +62,33 @@ namespace
     }
 }
 
+std::vector<Post> ParsePostsPage(const std::string& domain, const std::string& token, int offset, int count)
+{
+    json page = FetchPostsPage(domain, token, offset, count);
+    std::vector<Post> posts;
+
+    for (const auto& item : page["response"]["items"])
+    {
+        Post post;
+        post.id = item["id"];
+        post.owner_id = item["owner_id"];
+        post.date = item["date"];
+        post.text = item["text"];
+
+        posts.push_back(post);
+    }
+
+    return posts;
+}
+
 std::vector<Post> ParseAllPosts(const std::string& domain, const std::string& token, int totalCount)
 {
     std::vector<Post> posts;
 
     for (int offset = 0; offset < totalCount; offset += 100)
     {
-        json page = FetchPostsPage(domain, token, offset);
-
-        for (const auto& item : page["response"]["items"])
-        {
-            Post post;
-            post.id = item["id"];
-            post.owner_id = item["owner_id"];
-            post.date = item["date"];
-            post.text = item["text"];
-
-            posts.push_back(post);
-        }
+        auto page = ParsePostsPage(domain, token, offset);
+        posts.insert(posts.end(), page.begin(), page.end());
     }
 
     return posts;

@@ -1,8 +1,8 @@
 ﻿#include "VkParser.h"
 #include "Config.h"
+#include "OpenSearchIndexer.h"
 #include <iostream>
 #include <windows.h>
-#include "OpenSearchIndexer.h"
 
 int main()
 {
@@ -14,10 +14,20 @@ int main()
 
         std::string token = LoadVkToken();
         std::string domain = "nust_misis";
+        int totalCount = 21000;
 
-        auto posts = ParseAllPosts(domain, token, 100);
+        int totalIndexed = 0;
 
-        std::cout << "Total posts fetched: " << posts.size() << '\n';
+        for (int offset = 0; offset < totalCount; offset += 100)
+        {
+            auto page = ParsePostsPage(domain, token, offset);
+            IndexPosts("vk_posts", page);
+
+            totalIndexed += static_cast<int>(page.size());
+            std::cout << "Progress: " << totalIndexed << " / " << totalCount << '\n';
+        }
+
+        std::cout << "Done! Total indexed: " << totalIndexed << '\n';
     }
     catch (const std::exception& e)
     {
